@@ -1,3 +1,7 @@
-checking for Adabas support... cp: cannot stat '/usr/local/lib/odbclib.a': No such file or directory
-configure: error: ODBC header file '/usr/local/incl/sqlext.h' not found!
-The command '/bin/sh -c cd /usr/src/php/ext/odbc &&     phpize &&     ./configure --with-unixODBC=/usr &&     make -j$(nproc) &&     make install' returned a non-zero code: 1
+RUN cd /usr/src/php/ext/odbc && \
+    phpize && \
+    sed -i '/checking for Adabas support/,/fi/d' configure && \
+    ./configure --with-unixODBC=/usr && \
+    make -j$(nproc) && \
+    make install && \
+    echo "extension=odbc.so" > /usr/local/etc/php/conf.d/20-odbc.ini
