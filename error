@@ -1,3 +1,4 @@
+
 checking for Adabas support... cp: cannot stat '/usr/local/lib/odbclib.a': No such file or directory
 configure: error: ODBC header file '/usr/local/incl/sqlext.h' not found!
 The command '/bin/sh -c docker-php-ext-configure gd --with-freetype --with-jpeg     && docker-php-ext-configure ldap --with-libdir=lib/x86_64-linux-gnu/     && docker-php-ext-install -j$(nproc)     bz2     calendar     exif     ftp     gd     gettext     gmp     iconv     intl     ldap     mbstring     odbc     pcntl     pdo     pdo_odbc     pdo_mysql     pdo_pgsql     pdo_sqlite     pspell     shmop     soap     sockets     sysvmsg     sysvsem     sysvshm     xml     xsl     zip     && docker-php-ext-enable opcache' returned a non-zero code: 1
