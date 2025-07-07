@@ -2,14 +2,11 @@ FROM php:8.0.28-fpm
 
 # Установка системных зависимостей и исправление GPG ключей
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* \
-    && apt-get update -o Acquire::Check-Valid-Until=false -o Acquire::Check-Date=false \
-    && apt-get install -y debian-archive-keyring \
+    && echo "deb http://repo-mirror.localhost/repository/debian-bullseye-proxy bullseye main" > /etc/apt/sources.list \
+    && apt-get update \
+    && apt-get install -y debian-archive-keyring gnupg gnupg2 \
+    && apt-get clean \
     && apt-key add /usr/share/keyrings/debian-archive-bullseye-stable.gpg \
-    || { echo "Using fallback GPG keys"; \
-         apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 04EE7237B7D453EC 648ACFD622F3D138 DCC9EFBF77E11517 || true; } \
-    && echo "deb http://deb.debian.org/debian bullseye main" > /etc/apt/sources.list \
-    && echo "deb http://deb.debian.org/debian-security bullseye-security main" >> /etc/apt/sources.list \
-    && echo "deb http://deb.debian.org/debian bullseye-updates main" >> /etc/apt/sources.list \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
     libbz2-dev \
