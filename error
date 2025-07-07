@@ -1,10 +1,5 @@
-config.status: creating config.h
-/bin/bash /usr/src/php/ext/xmlreader/libtool --mode=compile cc -I. -I/usr/src/php/ext/xmlreader -I/usr/src/php/ext/xmlreader/include -I/usr/src/php/ext/xmlreader/main -I/usr/src/php/ext/xmlreader -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib -I/usr/include/libxml2  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64    -c /usr/src/php/ext/xmlreader/php_xmlreader.c -o php_xmlreader.lo
-mkdir .libs
- cc -I. -I/usr/src/php/ext/xmlreader -I/usr/src/php/ext/xmlreader/include -I/usr/src/php/ext/xmlreader/main -I/usr/src/php/ext/xmlreader -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib -I/usr/include/libxml2 -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -c /usr/src/php/ext/xmlreader/php_xmlreader.c  -fPIC -DPIC -o .libs/php_xmlreader.o
-/usr/src/php/ext/xmlreader/php_xmlreader.c:29:10: fatal error: ext/dom/dom_ce.h: No such file or directory
-   29 | #include "ext/dom/dom_ce.h"
-      |          ^~~~~~~~~~~~~~~~~~
-compilation terminated.
-make: *** [Makefile:209: php_xmlreader.lo] Error 1
-The command '/bin/sh -c docker-php-ext-configure gd --with-freetype --with-jpeg     && docker-php-ext-configure ldap --with-libdir=lib/x86_64-linux-gnu/     && docker-php-ext-install -j$(nproc)     bz2     calendar     exif     ftp     gd     gettext     gmp     iconv     intl     ldap     mbstring     pcntl     pdo     pdo_mysql     pdo_pgsql     pdo_sqlite     pspell     shmop     soap     sockets     sysvmsg     sysvsem     sysvshm     xml     xmlreader     xmlwriter     xsl     zip     && docker-php-ext-enable opcache sodium' returned a non-zero code: 2
+Step 7/9 : RUN echo "instantclient,/usr/lib/oracle/21/client64/lib" | pecl install oci8-3.2.1     && docker-php-ext-enable oci8
+ ---> Running in 51fd8fe068b0
+No releases available for package "pecl.php.net/oci8"
+install failed
+The command '/bin/sh -c echo "instantclient,/usr/lib/oracle/21/client64/lib" | pecl install oci8-3.2.1     && docker-php-ext-enable oci8' returned a non-zero code: 1
