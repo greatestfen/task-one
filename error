@@ -1,12 +1,3 @@
-error: 'oci8' does not exist
-
-usage: /usr/local/bin/docker-php-ext-enable [options] module-name [module-name ...]
-   ie: /usr/local/bin/docker-php-ext-enable gd mysqli
-       /usr/local/bin/docker-php-ext-enable pdo pdo_mysql
-       /usr/local/bin/docker-php-ext-enable --ini-name 0-apc.ini apcu apc
-
-Possible values for module-name:
-bz2.so calendar.so exif.so ftp.so gd.so gettext.so gmp.so iconv.so intl.so ldap.so mbstring.so opcache.so pcntl.so pdo.so pdo_mysql.so pdo_pgsql.so pdo_sqlite.so pspell.so shmop.so soap.so sockets.so sodium.so sysvmsg.so sysvsem.so sysvshm.so xml.so xsl.so zip.so
-
-Some of the above modules are already compiled into PHP; please check
-the output of "php -i" to see which modules are already loaded.
+checking for Adabas support... cp: cannot stat '/usr/local/lib/odbclib.a': No such file or directory
+configure: error: ODBC header file '/usr/local/incl/sqlext.h' not found!
+The command '/bin/sh -c docker-php-ext-configure gd --with-freetype --with-jpeg     && docker-php-ext-configure ldap --with-libdir=lib/x86_64-linux-gnu/     && docker-php-ext-install -j$(nproc)     bz2     calendar     exif     ftp     gd     gettext     gmp     iconv     intl     ldap     mbstring     odbc     pcntl     pdo     pdo_odbc     pdo_mysql     pdo_pgsql     pdo_sqlite     pspell     shmop     soap     sockets     sysvmsg     sysvsem     sysvshm     xml     xsl     zip     && docker-php-ext-enable opcache' returned a non-zero code: 1
