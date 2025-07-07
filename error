@@ -1,9 +1,4 @@
-checking for selected PDO ODBC flavour... configure: error: Unknown ODBC flavour yes
-  The include and lib dirs are looked for under 'dir'. The 'flavour' can be one
-  of: ibm-db2, iODBC, unixODBC, generic. If ',dir' part is omitted, default for
-  the flavour you have selected will be used. e.g.: --with-pdo-odbc=unixODBC
-  will check for unixODBC under /usr/local. You may attempt to use an otherwise
-  unsupported driver using the 'generic' flavour. The syntax for generic ODBC
-  support is: --with-pdo-odbc=generic,dir,libname,ldflags,cflags. When built as
-  'shared' the extension filename is always pdo_odbc.so
-The command '/bin/sh -c docker-php-ext-configure gd --with-freetype --with-jpeg     && docker-php-ext-configure ldap --with-libdir=lib/x86_64-linux-gnu/     && docker-php-ext-install -j$(nproc)     bz2     calendar     exif     ftp     gd     gettext     gmp     iconv     intl     ldap     mbstring     pcntl     pdo     pdo_odbc     pdo_mysql     pdo_pgsql     pdo_sqlite     pspell     shmop     soap     sockets     sysvmsg     sysvsem     sysvshm     xml     xsl     zip     && docker-php-ext-enable opcache' returned a non-zero code: 1
+tep 3/14 : RUN cd /usr/src/php/ext/odbc &&     phpize &&     ./configure --with-unixODBC=/usr &&     make -j $(nproc) &&     make install &&     echo "extension=odbc.so" > /usr/local/etc/php/conf.d/20-odbc.ini
+ ---> Running in 268215dec51f
+/bin/sh: 1: cd: can't cd to /usr/src/php/ext/odbc
+The command '/bin/sh -c cd /usr/src/php/ext/odbc &&     phpize &&     ./configure --with-unixODBC=/usr &&     make -j $(nproc) &&     make install &&     echo "extension=odbc.so" > /usr/local/etc/php/conf.d/20-odbc.ini' returned a non-zero code: 2
