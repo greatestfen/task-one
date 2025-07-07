@@ -1,6 +1,6 @@
 FROM php:8.0.28-fpm
 
-# Установка системных зависимостей
+# Установка системных зависимостей и alien
 RUN apt-get update && apt-get install -y \
     libbz2-dev \
     libc-client-dev \
@@ -26,24 +26,24 @@ RUN apt-get update && apt-get install -y \
     zlib1g-dev \
     libaio1 \
     wget \
-    unzip \
+    alien \
     && rm -rf /var/lib/apt/lists/*
 
-# Скачивание и установка Oracle Instant Client 21.12 через ZIP-архивы
-RUN mkdir -p /opt/oracle \
-    && cd /opt/oracle \
-    && wget -q https://download.oracle.com/otn_software/linux/instantclient/2112000/instantclient-basic-linux.x64-21.12.0.0.0dbru.zip \
-    && wget -q https://download.oracle.com/otn_software/linux/instantclient/2112000/instantclient-sdk-linux.x64-21.12.0.0.0dbru.zip \
-    && unzip instantclient-basic-linux.x64-21.12.0.0.0dbru.zip \
-    && unzip instantclient-sdk-linux.x64-21.12.0.0.0dbru.zip \
-    && rm instantclient-basic-linux.x64-21.12.0.0.0dbru.zip instantclient-sdk-linux.x64-21.12.0.0.0dbru.zip \
-    && mv instantclient_21_12 /opt/oracle/instantclient \
-    && echo /opt/oracle/instantclient > /etc/ld.so.conf.d/oracle-instantclient.conf \
+# Скачивание и установка Oracle Instant Client 21.12 через RPM
+RUN mkdir -p /opt/oracle && cd /opt/oracle \
+    && wget -q --no-check-certificate https://download.oracle.com/otn_software/linux/instantclient/2112000/oracle-instantclient-basic-21.12.0.0.0-1.x86_64.rpm \
+    && wget -q --no-check-certificate https://download.oracle.com/otn_software/linux/instantclient/2112000/oracle-instantclient-devel-21.12.0.0.0-1.x86_64.rpm \
+    && ls -l *.rpm \
+    && alien -i oracle-instantclient-basic-21.12.0.0.0-1.x86_64.rpm \
+    && alien -i oracle-instantclient-devel-21.12.0.0.0-1.x86_64.rpm \
+    && rm oracle-instantclient-basic-21.12.0.0.0-1.x86_64.rpm oracle-instantclient-devel-21.12.0.0.0-1.x86_64.rpm \
+    && ln -s /usr/lib/oracle/21/client64 /opt/oracle/instantclient \
+    && echo /usr/lib/oracle/21/client64/lib > /etc/ld.so.conf.d/oracle-instantclient.conf \
     && ldconfig
 
 # Установка переменных окружения для Oracle
-ENV ORACLE_HOME=/opt/oracle/instantclient
-ENV LD_LIBRARY_PATH=/opt/oracle/instantclient:$LD_LIBRARY_PATH
+ENV ORACLE_HOME=/usr/lib/oracle/21/client64
+ENV LD_LIBRARY_PATH=/usr/lib/oracle/21/client64/lib:$LD_LIBRARY_PATH
 
 # Конфигурация и установка расширений PHP
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
@@ -82,7 +82,7 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-enable opcache sodium
 
 # Установка PECL расширения oci8
-RUN echo "instantclient,/opt/oracle/instantclient" | pecl install oci8-3.2.1 \
+RUN echo "instantclient,/usr/lib/oracle/21/client64/lib" | pecl install oci8-3.2.1 \
     && docker-php-ext-enable oci8
 
 # Настройка PHP
