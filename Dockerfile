@@ -1,17 +1,17 @@
 FROM php:8.0.28-fpm
 
 # Установка системных зависимостей и исправление GPG ключей
-RUN apt-get update && apt-get install -y gnupg2 \
-    && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 04EE7237B7D453EC 648ACFD622F3D138 DCC9EFBF77E11517 \
-    || { echo "Failed to fetch GPG keys, trying alternative method"; \
-         curl -sSL https://deb.debian.org/debian-security/dists/bullseye-security/Release.gpg | apt-key add -; \
-         curl -sSL https://deb.debian.org/debian/dists/bullseye/Release.gpg | apt-key add -; \
-         apt-get update --allow-unauthenticated; } \
+RUN apt-get clean && rm -rf /var/lib/apt/lists/* \
+    && apt-get update -o Acquire::Check-Valid-Until=false -o Acquire::Check-Date=false \
+    && apt-get install -y debian-archive-keyring \
+    && apt-key add /usr/share/keyrings/debian-archive-bullseye-stable.gpg \
+    || { echo "Using fallback GPG keys"; \
+         apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 04EE7237B7D453EC 648ACFD622F3D138 DCC9EFBF77E11517 || true; } \
     && echo "deb http://deb.debian.org/debian bullseye main" > /etc/apt/sources.list \
     && echo "deb http://deb.debian.org/debian-security bullseye-security main" >> /etc/apt/sources.list \
     && echo "deb http://deb.debian.org/debian bullseye-updates main" >> /etc/apt/sources.list \
     && apt-get update \
-    && apt-get install -y \
+    && apt-get install -y --no-install-recommends \
     libbz2-dev \
     libc-client-dev \
     libcurl4-openssl-dev \
