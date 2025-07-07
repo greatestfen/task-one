@@ -1,5 +1,5 @@
-Step 7/9 : RUN echo "instantclient,/usr/lib/oracle/21/client64/lib" | pecl install oci8-3.2.1     && docker-php-ext-enable oci8
- ---> Running in 51fd8fe068b0
+Step 7/9 : RUN echo "instantclient,/usr/lib/oracle/21/client64/lib" | pecl install oci8     && docker-php-ext-enable oci8
+ ---> Running in 93f38c012621
 No releases available for package "pecl.php.net/oci8"
 install failed
-The command '/bin/sh -c echo "instantclient,/usr/lib/oracle/21/client64/lib" | pecl install oci8-3.2.1     && docker-php-ext-enable oci8' returned a non-zero code: 1
+The command '/bin/sh -c echo "instantclient,/usr/lib/oracle/21/client64/lib" | pecl install oci8     && docker-php-ext-enable oci8' returned a non-zero code: 1
