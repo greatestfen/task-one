@@ -1,9 +1,12 @@
 FROM php:8.0.28-fpm
 
-# Обновление GPG ключей и настройка репозиториев
+# Установка системных зависимостей и исправление GPG ключей
 RUN apt-get update && apt-get install -y gnupg2 \
-    && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 04EE7237B7D453EC 648ACFD622F3D138 DCC9EFBF77E11517 \
-    || { echo "Failed to fetch GPG keys, proceeding without verification"; apt-get update --allow-insecure-repositories; } \
+    && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 04EE7237B7D453EC 648ACFD622F3D138 DCC9EFBF77E11517 \
+    || { echo "Failed to fetch GPG keys, trying alternative method"; \
+         curl -sSL https://deb.debian.org/debian-security/dists/bullseye-security/Release.gpg | apt-key add -; \
+         curl -sSL https://deb.debian.org/debian/dists/bullseye/Release.gpg | apt-key add -; \
+         apt-get update --allow-unauthenticated; } \
     && echo "deb http://deb.debian.org/debian bullseye main" > /etc/apt/sources.list \
     && echo "deb http://deb.debian.org/debian-security bullseye-security main" >> /etc/apt/sources.list \
     && echo "deb http://deb.debian.org/debian bullseye-updates main" >> /etc/apt/sources.list \
@@ -40,14 +43,13 @@ RUN apt-get update && apt-get install -y gnupg2 \
 RUN mkdir -p /opt/oracle && cd /opt/oracle \
     && wget -q --no-check-certificate https://download.oracle.com/otn_software/linux/instantclient/2112000/oracle-instantclient-basic-21.12.0.0.0-1.x86_64.rpm \
     && wget -q --no-check-certificate https://download.oracle.com/otn_software/linux/instantclient/2112000/oracle-instantclient-devel-21.12.0.0.0-1.x86_64.rpm \
-    && wget -q --no-check-certificate https://download.oracle.com/otn_software/linux/instantclient/2112000/oracle-instantclient-odbc-21.12.0.0.0-1.x86_64.rpm \
     && ls -l *.rpm || { echo "Failed to download RPM files"; exit 1; } \
     && alien -i oracle-instantclient-basic-21.12.0.0.0-1.x86_64.rpm \
     && alien -i oracle-instantclient-devel-21.12.0.0.0-1.x86_64.rpm \
-    && alien -i oracle-instantclient-odbc-21.12.0.0.0-1.x86_64.rpm \
     && rm oracle-instantclient-*.rpm \
     && ln -s /usr/lib/oracle/21/client64 /opt/oracle/instantclient \
-    && echo /usr/lib/oracle/21/client64/lib > /etc
+    && echo /usr/lib/oracle/21/client64/lib > /etc/ld.so.conf.d/oracle-instantclient.conf \
+    && ldconfig
 
 # Установка переменных окружения для Oracle
 ENV ORACLE_HOME=/usr/lib/oracle/21/client64
