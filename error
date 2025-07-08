@@ -2,3 +2,5 @@
 ./configure: line 4216: cd: yes: No such file or directory
 cp: cannot stat 'yes/lib/odbclib.a': No such file or directory
 configure: error: ODBC header file 'yes/incl/sqlext.h' not found!
+
+https://s3.amazonaws.com/cloudhsmv2-software/CloudHsmClient/Windows/AWSCloudHSMClient-latest.msi
