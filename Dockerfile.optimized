@@ -1,0 +1,120 @@
+# Этап сборки
+FROM php:8.0.28-fpm AS builder
+
+# Установка зависимостей для сборки
+RUN apt-get clean && rm -rf /var/lib/apt/lists/* \
+    && echo "deb http://localhost.localhost/repository/debian-bullseye-proxy bullseye main" > /etc/apt/sources.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+    debian-archive-keyring gnupg gnupg2 \
+    unixodbc-dev \
+    libtool autoconf make gcc g++ git pkg-config \
+    libbz2-dev libc-client-dev libcurl4-openssl-dev libfreetype6-dev \
+    libgmp-dev libicu-dev libjpeg62-turbo-dev libkrb5-dev \
+    libldap2-dev libonig-dev libpng-dev libpq-dev libpspell-dev \
+    libreadline-dev libsodium-dev libsqlite3-dev libssl-dev \
+    libxml2-dev libxslt1-dev libzip-dev libaio1 \
+    wget alien rpm \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Загрузка исходников odbc (для возможной ручной сборки)
+RUN mkdir -p /usr/src/php/ext/odbc && \
+    curl --insecure -sSL https://github.com/php/php-src/raw/PHP-8.2.0/ext/odbc/config.m4 -o /usr/src/php/ext/odbc/config.m4 && \
+    curl --insecure -sSL https://github.com/php/php-src/raw/PHP-8.2.0/ext/odbc/odbc.c -o /usr/src/php/ext/odbc/odbc.c && \
+    curl --insecure -sSL https://github.com/php/php-src/raw/PHP-8.2.0/ext/odbc/php_odbc.h -o /usr/src/php/ext/odbc/php_odbc.h
+
+# Создание символических ссылок для ODBC
+RUN mkdir -p /usr/local/incl && ln -s /usr/include/odbcinst.h /usr/local/incl/odbcinst.h \
+    && ln -s /usr/include/sqlext.h /usr/local/incl/sqlext.h \
+    && ln -s /usr/include/sql.h /usr/local/incl/sql.h \
+    && ln -s /usr/include/sqltypes.h /usr/local/incl/sqltypes.h \
+    && mkdir -p /usr/local/lib && ln -s /usr/lib/x86_64-linux-gnu/libodbc.so /usr/local/lib/libodbc.so
+
+# Установка Oracle Instant Client через RPM
+RUN mkdir -p /opt/oracle && cd /opt/oracle \
+    && wget -q --no-check-certificate https://download.oracle.com/otn_software/linux/instantclient/2112000/oracle-instantclient-basic-21.12.0.0.0-1.x86_64.rpm \
+    && wget -q --no-check-certificate https://download.oracle.com/otn_software/linux/instantclient/2112000/oracle-instantclient-devel-21.12.0.0.0-1.x86_64.rpm \
+    && ls -l *.rpm || { echo "Failed to download RPM files"; exit 1; } \
+    && alien -i oracle-instantclient-basic-21.12.0.0.0-1.x86_64.rpm \
+    && alien -i oracle-instantclient-devel-21.12.0.0.0-1.x86_64.rpm \
+    && rm oracle-instantclient-*.rpm \
+    && ln -s /usr/lib/oracle/21/client64 /opt/oracle/instantclient \
+    && echo /usr/lib/oracle/21/client64/lib > /etc/ld.so.conf.d/oracle-instantclient.conf \
+    && ldconfig
+
+# Конфигурация и установка PHP-расширений
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-configure ldap --with-libdir=lib/x86_64-linux-gnu/ \
+    && docker-php-ext-configure pdo_odbc --with-pdo-odbc=unixODBC,/usr \
+    && docker-php-ext-install -j$(nproc) \
+    bz2 calendar exif ftp gd gettext gmp iconv intl ldap mbstring pcntl \
+    pdo pdo_mysql pdo_pgsql pdo_sqlite pspell shmop soap sockets \
+    sysvmsg sysvsem sysvshm xml xsl zip pdo_odbc \
+    && docker-php-ext-configure pdo_oci --with-pdo-oci=instantclient,/usr/lib/oracle/21/client64/lib,21.1 \
+    && docker-php-ext-install pdo_oci \
+    && docker-php-ext-configure oci8 --with-oci8=instantclient,/usr/lib/oracle/21/client64/lib \
+    && docker-php-ext-install oci8 \
+    && docker-php-ext-enable opcache
+
+# Настройка PHP
+RUN { \
+    echo 'opcache.enable=1'; \
+    echo 'opcache.memory_consumption=128'; \
+    echo 'opcache.interned_strings_buffer=8'; \
+    echo 'opcache.max_accelerated_files=4000'; \
+    echo 'opcache.revalidate_freq=60'; \
+    echo 'opcache.fast_shutdown=1'; \
+} > /usr/local/etc/php/conf.d/opcache-recommended.ini
+
+# Финальный этап
+FROM php:8.0.28-fpm
+
+# Установка runtime-зависимостей
+RUN apt-get clean && rm -rf /var/lib/apt/lists/* \
+    && echo "deb http://localhost.localhost/repository/debian-bullseye-proxy bullseye main" > /etc/apt/sources.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+    unixodbc \
+    libbz2-1.0 \
+    libc-client2007e \
+    libcurl4 \
+    libfreetype6 \
+    libgmp10 \
+    libicu67 \
+    libjpeg62-turbo \
+    libkrb5-3 \
+    libldap-2.4-2 \
+    libonig5 \
+    libpng16-16 \
+    libpq5 \
+    libpspell5 \
+    libreadline8 \
+    libsodium23 \
+    libsqlite3-0 \
+    libssl1.1 \
+    libxml2 \
+    libxslt1.1 \
+    libzip4 \
+    libaio1 \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Копирование Oracle Instant Client и PHP-расширений из этапа сборки
+COPY --from=builder /usr/lib/oracle /usr/lib/oracle
+COPY --from=builder /etc/ld.so.conf.d/oracle-instantclient.conf /etc/ld.so.conf.d/oracle-instantclient.conf
+COPY --from=builder /usr/local/lib/php/extensions /usr/local/lib/php/extensions
+COPY --from=builder /usr/local/etc/php/conf.d /usr/local/etc/php/conf.d
+COPY --from=builder /usr/local/incl /usr/local/incl
+COPY --from=builder /usr/local/lib/libodbc.so /usr/local/lib/libodbc.so
+
+# Установка переменных окружения для Oracle
+ENV ORACLE_HOME=/usr/lib/oracle/21/client64
+ENV LD_LIBRARY_PATH=/usr/lib/oracle/21/client64/lib:$LD_LIBRARY_PATH
+ENV PHP_OCI8_DIR=/usr/lib/oracle/21/client64/lib
+ENV CFLAGS="-I/usr/include"
+ENV LDFLAGS="-L/usr/lib"
+
+# Обновление ldconfig
+RUN ldconfig
+
+# Чистка временных файлов
+RUN rm -rf /tmp/*
