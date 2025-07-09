@@ -1,6 +1,6 @@
 FROM php:8.0.28-fpm
 
-# Установка системных зависимостей и исправление GPG ключей
+# Установка системных зависимостей
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* \
     && echo "deb http://localhost.localhost/repository/debian-bullseye-proxy bullseye main" > /etc/apt/sources.list \
     && apt-get update \
@@ -43,11 +43,13 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/* \
     rpm \
     && rm -rf /var/lib/apt/lists/*
 
+# Загрузка исходников odbc (для возможной ручной сборки, оставлено закомментированным)
 RUN mkdir -p /usr/src/php/ext/odbc && \
     curl --insecure -sSL https://github.com/php/php-src/raw/PHP-8.2.0/ext/odbc/config.m4 -o /usr/src/php/ext/odbc/config.m4 && \
     curl --insecure -sSL https://github.com/php/php-src/raw/PHP-8.2.0/ext/odbc/odbc.c -o /usr/src/php/ext/odbc/odbc.c && \
     curl --insecure -sSL https://github.com/php/php-src/raw/PHP-8.2.0/ext/odbc/php_odbc.h -o /usr/src/php/ext/odbc/php_odbc.h
 
+# Закомментированный код для ручной сборки odbc
 #RUN cd /usr/src/php/ext/odbc && \
 #    sed -i '/AC_MSG_CHECKING(\[for Adabas support\])/,+10d' config.m4 && \
 #    phpize && \
@@ -56,6 +58,13 @@ RUN mkdir -p /usr/src/php/ext/odbc && \
 #    make -j$(nproc) && \
 #    make install && \
 #    echo "extension=odbc.so" > /usr/local/etc/php/conf.d/20-odbc.ini
+
+# Создание символических ссылок для ODBC заголовков и библиотек
+RUN mkdir -p /usr/local/incl && ln -s /usr/include/odbcinst.h /usr/local/incl/odbcinst.h \
+    && ln -s /usr/include/sqlext.h /usr/local/incl/sqlext.h \
+    && ln -s /usr/include/sql.h /usr/local/incl/sql.h \
+    && ln -s /usr/include/sqltypes.h /usr/local/incl/sqltypes.h \
+    && mkdir -p /usr/local/lib && ln -s /usr/lib/x86_64-linux-gnu/libodbc.so /usr/local/lib/libodbc.so
 
 # Скачивание и установка Oracle Instant Client 21.12 через RPM
 # Если wget не работает, замените на COPY после ручной загрузки RPM
@@ -80,6 +89,7 @@ ENV LDFLAGS="-L/usr/lib"
 # Конфигурация и установка расширений PHP
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-configure ldap --with-libdir=lib/x86_64-linux-gnu/ \
+    && docker-php-ext-configure pdo_odbc --with-pdo-odbc=unixODBC,/usr \
     && docker-php-ext-install -j$(nproc) \
     bz2 \
     calendar \
@@ -94,7 +104,6 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     mbstring \
     pcntl \
     pdo \
-    pdo_odbc \
     pdo_mysql \
     pdo_pgsql \
     pdo_sqlite \
@@ -111,8 +120,7 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-enable opcache
 
 # pdo_odbc
-RUN docker-php-ext-configure pdo_odbc --with-pdo-odbc=unixODBC,/usr \
-    && docker-php-ext-install pdo_odbc
+RUN docker-php-ext-install pdo_odbc
 
 # pdo_oci
 RUN docker-php-ext-configure pdo_oci --with-pdo-oci=instantclient,${PHP_OCI8_DIR},21.1 \
@@ -131,3 +139,6 @@ RUN { \
     echo 'opcache.revalidate_freq=60'; \
     echo 'opcache.fast_shutdown=1'; \
 } > /usr/local/etc/php/conf.d/opcache-recommended.ini
+
+# Чистка кэша
+RUN pecl clear-cache && rm -rf /tmp/pear
